@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning History</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+
+<nav class="navbar">
+    <div>
+        <strong>诗 Chinese Poetry Learning</strong>
+    </div>
+
+    <div class="nav-links">
+        <a th:href="@{/poems}">Poems</a>
+        <a th:href="@{/history}">Learning History</a>
+        <a th:href="@{/ai-chat}">AI Assistant</a>
+
+        <form th:action="@{/logout}" method="post">
+            <button type="submit">Logout</button>
+        </form>
+    </div>
+</nav>
+
+<main class="container">
+
+    <div class="page-header">
+        <div>
+            <h1>Learning History</h1>
+
+            <p class="muted">
+                Quiz results for
+                <strong th:text="${user.fullName}">
+                    User
+                </strong>
+            </p>
+        </div>
+
+        <a class="button" th:href="@{/poems}">
+            Return to Poems
+        </a>
+    </div>
+
+    <section class="card"
+             th:if="${#lists.isEmpty(attempts)}">
+
+        <h2>No quiz history yet</h2>
+
+        <p class="muted">
+            Complete your first quiz and the result will appear here.
+        </p>
+    </section>
+
+    <section class="card"
+             th:unless="${#lists.isEmpty(attempts)}">
+
+        <table>
+            <thead>
+            <tr>
+                <th>Poem</th>
+                <th>Score</th>
+                <th>Percentage</th>
+                <th>Completed At</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="attempt : ${attempts}">
+
+                <td th:text="${attempt.poem.title}">
+                    Poem
+                </td>
+
+                <td>
+                    <span th:text="${attempt.score}">0</span>
+                    /
+                    <span th:text="${attempt.totalQuestions}">0</span>
+                </td>
+
+                <td>
+                    <span th:text="${attempt.percentage}">0</span>%
+                </td>
+
+                <td th:text="${attempt.completedAt}">
+                    Date and time
+                </td>
+
+                <td>
+                    <a class="button"
+                       th:href="@{/quiz/{id}(id=${attempt.poem.id})}">
+                        Try Again
+                    </a>
+                </td>
+
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+</main>
+
+</body>
+</html>

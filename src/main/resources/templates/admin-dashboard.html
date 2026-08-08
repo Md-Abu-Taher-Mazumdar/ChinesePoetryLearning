@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Administrator Dashboard</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #fffaf1;
+            color: #211b18;
+            font-family: Arial, sans-serif;
+        }
+
+        .navbar {
+            background: #82162a;
+            color: white;
+            padding: 18px 6%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: bold;
+        }
+
+        .container {
+            width: min(1200px, 92%);
+            margin: 35px auto;
+        }
+
+        h1, h2 {
+            font-family: Georgia, serif;
+        }
+
+        h1 {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #786359;
+            margin-bottom: 30px;
+        }
+
+        .statistics {
+            display: grid;
+            grid-template-columns:
+                repeat(auto-fit, minmax(190px, 1fr));
+            gap: 18px;
+            margin-bottom: 35px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #eadccd;
+            border-radius: 18px;
+            padding: 23px;
+            box-shadow: 0 10px 25px
+            rgba(70, 30, 20, 0.07);
+        }
+
+        .stat-card p {
+            color: #795f55;
+            margin: 0 0 12px;
+            font-weight: bold;
+        }
+
+        .stat-card strong {
+            color: #9d1d35;
+            font-family: Georgia, serif;
+            font-size: 37px;
+        }
+
+        .table-card {
+            background: white;
+            border: 1px solid #eadccd;
+            border-radius: 18px;
+            padding: 25px;
+            overflow-x: auto;
+            box-shadow: 0 10px 25px
+            rgba(70, 30, 20, 0.07);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 18px;
+        }
+
+        th {
+            background: #82162a;
+            color: white;
+            text-align: left;
+            padding: 14px;
+        }
+
+        td {
+            padding: 14px;
+            border-bottom: 1px solid #eadccd;
+        }
+
+        tr:hover td {
+            background: #fff6e9;
+        }
+
+        .role {
+            background: #f6ded8;
+            color: #82162a;
+            padding: 7px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .admin-note {
+            margin-top: 25px;
+            background: #fff0d5;
+            border-left: 5px solid #ad2239;
+            padding: 17px;
+            border-radius: 8px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar">
+    <strong>Administrator Dashboard</strong>
+
+    <div>
+        <a th:href="@{/poems}">Poems</a>
+        <a th:href="@{/history}">History</a>
+        <a th:href="@{/logout}">Logout</a>
+    </div>
+</nav>
+
+<main class="container">
+
+    <h1>System Administration</h1>
+
+    <p class="subtitle">
+        View users, learning content and system activity.
+    </p>
+
+    <section class="statistics">
+
+        <article class="stat-card">
+            <p>Registered Users</p>
+            <strong th:text="${userCount}">0</strong>
+        </article>
+
+        <article class="stat-card">
+            <p>Chinese Poems</p>
+            <strong th:text="${poemCount}">0</strong>
+        </article>
+
+        <article class="stat-card">
+            <p>Vocabulary Words</p>
+            <strong th:text="${vocabularyCount}">0</strong>
+        </article>
+
+        <article class="stat-card">
+            <p>Quiz Questions</p>
+            <strong th:text="${questionCount}">0</strong>
+        </article>
+
+        <article class="stat-card">
+            <p>Quiz Attempts</p>
+            <strong th:text="${attemptCount}">0</strong>
+        </article>
+
+    </section>
+
+    <section class="table-card">
+
+        <h2>Registered User Accounts</h2>
+
+        <table>
+            <thead>
+            <tr>
+                <th>User ID</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="user : ${users}">
+                <td th:text="${user.id}">1</td>
+
+                <td th:text="${user.username}">
+                    username
+                </td>
+
+                <td th:text="${user.email}">
+                    email@example.com
+                </td>
+
+                <td>
+                    <span class="role"
+                          th:text="${user.role}">
+                        USER
+                    </span>
+                </td>
+            </tr>
+
+            <tr th:if="${#lists.isEmpty(users)}">
+                <td colspan="4">
+                    No registered users were found.
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+    </section>
+
+    <div class="admin-note">
+        The administrator dashboard reads live information
+        from the H2 database. Passwords are never displayed.
+    </div>
+
+</main>
+
+</body>
+</html>

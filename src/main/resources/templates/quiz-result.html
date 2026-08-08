@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Result</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+
+<nav class="navbar">
+    <div>
+        <strong>诗 Chinese Poetry Learning</strong>
+    </div>
+
+    <div class="nav-links">
+        <a th:href="@{/poems}">Poems</a>
+        <a th:href="@{/history}">Learning History</a>
+
+        <form th:action="@{/logout}" method="post">
+            <button type="submit">Logout</button>
+        </form>
+    </div>
+</nav>
+
+<main class="container">
+
+    <section class="card"
+             style="max-width: 650px; margin: 60px auto; text-align: center">
+
+        <div class="logo">✓</div>
+
+        <h1>Quiz Completed</h1>
+
+        <p>
+            Poem:
+            <strong th:text="${poem.title}">
+                Poem title
+            </strong>
+        </p>
+
+        <h2>
+            Your score:
+            <span th:text="${score}">0</span>
+            /
+            <span th:text="${total}">0</span>
+        </h2>
+
+        <h2>
+            <span th:text="${percentage}">0</span>%
+        </h2>
+
+        <div class="success-message"
+             th:if="${percentage >= 80}">
+            Excellent work! You understand this poem very well.
+        </div>
+
+        <div class="success-message"
+             th:if="${percentage >= 50 and percentage < 80}">
+            Good work! Review the poem and try again.
+        </div>
+
+        <div class="error-message"
+             th:if="${percentage < 50}">
+            Keep learning. Read the poem again before your next attempt.
+        </div>
+
+        <div class="actions"
+             style="justify-content: center">
+
+            <a class="button"
+               th:href="@{/quiz/{id}(id=${poem.id})}">
+                Try Again
+            </a>
+
+            <a class="button"
+               th:href="@{/poems/{id}(id=${poem.id})}">
+                Review Poem
+            </a>
+
+            <a class="button"
+               th:href="@{/history}">
+                View History
+            </a>
+        </div>
+    </section>
+
+</main>
+
+</body>
+</html>

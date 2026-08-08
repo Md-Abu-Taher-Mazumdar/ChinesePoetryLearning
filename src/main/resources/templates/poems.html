@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Chinese Poetry Learning</title>
+
+    <link rel="stylesheet"
+          th:href="@{/css/style.css}">
+</head>
+
+<body>
+
+<nav class="navbar">
+    <a class="brand"
+       th:href="@{/poems}">
+        诗 Chinese Poetry Learning
+    </a>
+
+    <div class="nav-links">
+        <a th:href="@{/poems}">
+            Poems
+        </a>
+
+        <a th:href="@{/history}">
+            Learning History
+        </a>
+
+        <a th:href="@{/ai-chat}">
+            AI Assistant
+        </a>
+
+        <a th:href="@{/ai-call}">
+            AI Tutor Call
+        </a>
+
+        <a th:href="@{/writing}">
+            Writing Practice
+        </a>
+
+        <a th:href="@{/admin}">
+            Admin Dashboard
+        </a>
+
+        <form th:action="@{/logout}"
+              method="post">
+
+            <button type="submit">
+                Logout
+            </button>
+        </form>
+    </div>
+</nav>
+
+<main class="container">
+
+    <div class="page-header">
+        <div>
+            <h1>Classical Chinese Poetry</h1>
+
+            <p class="muted">
+                Read poems, learn vocabulary and test your understanding.
+            </p>
+        </div>
+    </div>
+
+    <div class="card">
+        <form th:action="@{/poems}"
+              method="get">
+
+            <label for="search">
+                Search by title or author
+            </label>
+
+            <input id="search"
+                   name="search"
+                   type="text"
+                   th:value="${search}"
+                   placeholder="Example: Li Bai">
+
+            <button type="submit">
+                Search
+            </button>
+        </form>
+    </div>
+
+    <br>
+
+    <div class="card"
+         th:if="${#lists.isEmpty(poems)}">
+
+        <h2>No poems found</h2>
+
+        <p class="muted">
+            Try another search word.
+        </p>
+    </div>
+
+    <div class="card-grid"
+         th:unless="${#lists.isEmpty(poems)}">
+
+        <article class="card"
+                 th:each="poem : ${poems}">
+
+            <span class="badge"
+                  th:text="${poem.dynasty}">
+                Dynasty
+            </span>
+
+            <h2 th:text="${poem.title}">
+                Poem title
+            </h2>
+
+            <p class="muted">
+                By
+                <strong th:text="${poem.author}">
+                    Author
+                </strong>
+            </p>
+
+            <p class="poem-text"
+               th:text="${poem.chineseText}">
+                Chinese poem text
+            </p>
+
+            <div class="actions">
+
+                <a class="button"
+                   th:href="@{/poems/{id}(id=${poem.id})}">
+                    Study This Poem
+                </a>
+
+                <a class="button"
+                   th:href="@{/quiz/{id}(id=${poem.id})}">
+                    Take Quiz
+                </a>
+
+            </div>
+        </article>
+    </div>
+
+</main>
+
+</body>
+</html>

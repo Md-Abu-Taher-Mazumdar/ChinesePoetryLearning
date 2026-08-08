@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="_csrf"
+          th:content="${_csrf.token}">
+
+    <meta name="_csrf_header"
+          th:content="${_csrf.headerName}">
+
+    <title>AI Tutor Call</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #fffaf1;
+            color: #211b18;
+            font-family: Arial, sans-serif;
+        }
+
+        .navbar {
+            background: #82162a;
+            color: white;
+            padding: 18px 6%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            margin-left: 22px;
+            font-weight: bold;
+        }
+
+        .container {
+            width: min(1100px, 92%);
+            margin: 35px auto;
+        }
+
+        h1 {
+            font-family: Georgia, serif;
+            font-size: 38px;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #765f55;
+            margin-bottom: 25px;
+        }
+
+        .call-grid {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #eadccd;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 12px 30px rgba(80, 30, 20, 0.08);
+        }
+
+        .video-screen {
+            min-height: 480px;
+            background: linear-gradient(145deg, #3c1721, #8a1d32);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .video-screen::before {
+            content: "";
+            position: absolute;
+            width: 330px;
+            height: 330px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .avatar {
+            width: 190px;
+            height: 190px;
+            border-radius: 50%;
+            background: #fff0dd;
+            border: 7px solid rgba(255, 255, 255, 0.75);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 105px;
+            z-index: 2;
+            transition: transform 0.25s;
+        }
+
+        .avatar.speaking {
+            animation: speaking 0.65s infinite alternate;
+            box-shadow: 0 0 35px #ffd58c;
+        }
+
+        @keyframes speaking {
+            from {
+                transform: scale(1);
+            }
+
+            to {
+                transform: scale(1.06);
+            }
+        }
+
+        .teacher-name {
+            z-index: 2;
+            font-size: 25px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .call-status {
+            z-index: 2;
+            margin-top: 10px;
+            color: #ffe6c5;
+        }
+
+        .selector {
+            z-index: 2;
+            display: flex;
+            gap: 10px;
+            margin-top: 22px;
+        }
+
+        button {
+            border: none;
+            border-radius: 12px;
+            padding: 14px 20px;
+            background: #ad2239;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #82162a;
+        }
+
+        button:disabled {
+            background: #a9a3a3;
+            cursor: not-allowed;
+        }
+
+        .selector button {
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 10px 14px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 115px;
+            border: 1px solid #dac7ba;
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 17px;
+            resize: vertical;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #dac7ba;
+            border-radius: 10px;
+            margin-bottom: 18px;
+            font-size: 16px;
+        }
+
+        .answer-box {
+            min-height: 145px;
+            margin-top: 20px;
+            padding: 18px;
+            border-radius: 14px;
+            background: #fff7eb;
+            border: 1px solid #ead8c8;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .end-button {
+            background: #414141;
+        }
+
+        .status-message {
+            margin-top: 14px;
+            color: #82162a;
+            font-weight: bold;
+        }
+
+        @media (max-width: 850px) {
+            .call-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar">
+    <strong>诗 Chinese Poetry Learning</strong>
+
+    <div>
+        <a th:href="@{/poems}">Poems</a>
+        <a th:href="@{/ai-chat}">AI Chat</a>
+        <a th:href="@{/history}">History</a>
+    </div>
+</nav>
+
+<main class="container">
+
+    <h1>AI Poetry Tutor Call</h1>
+
+    <p class="subtitle">
+        Speak with a professional AI tutor using your microphone.
+    </p>
+
+    <div class="call-grid">
+
+        <section class="card video-screen">
+
+            <div id="avatar"
+                 class="avatar">
+                👩🏻‍🏫
+            </div>
+
+            <div id="teacherName"
+                 class="teacher-name">
+                Teacher Mei
+            </div>
+
+            <div id="callStatus"
+                 class="call-status">
+                Ready to start
+            </div>
+
+            <div class="selector">
+                <button type="button"
+                        onclick="selectTutor('female')">
+                    Female Tutor
+                </button>
+
+                <button type="button"
+                        onclick="selectTutor('male')">
+                    Male Tutor
+                </button>
+            </div>
+
+        </section>
+
+        <section class="card">
+
+            <h2>Talk with Your Tutor</h2>
+
+            <label for="language">
+                Recognition language
+            </label>
+
+            <select id="language">
+                <option value="zh-CN">Chinese</option>
+                <option value="en-US">English</option>
+                <option value="bn-BD">Bangla</option>
+            </select>
+
+            <label for="message">
+                Your spoken question
+            </label>
+
+            <textarea id="message"
+                      placeholder="Your speech will appear here..."></textarea>
+
+            <div class="buttons">
+                <button id="speakButton"
+                        type="button"
+                        onclick="startListening()">
+                    🎤 Start Speaking
+                </button>
+
+                <button id="sendButton"
+                        type="button"
+                        onclick="askAi()">
+                    Ask AI Tutor
+                </button>
+
+                <button type="button"
+                        class="end-button"
+                        onclick="endCall()">
+                    End Call
+                </button>
+            </div>
+
+            <p id="browserStatus"
+               class="status-message"></p>
+
+            <h2>AI Tutor Answer</h2>
+
+            <div id="answer"
+                 class="answer-box">
+                The tutor's answer will appear here.
+            </div>
+
+        </section>
+
+    </div>
+
+</main>
+
+<script th:inline="javascript">
+
+    const askUrl =
+        /*[[@{/ai-call/ask}]]*/ "/ai-call/ask";
+
+    const csrfToken =
+        document.querySelector(
+            'meta[name="_csrf"]'
+        ).getAttribute("content");
+
+    const csrfHeader =
+        document.querySelector(
+            'meta[name="_csrf_header"]'
+        ).getAttribute("content");
+
+    const avatar =
+        document.getElementById("avatar");
+
+    const teacherName =
+        document.getElementById("teacherName");
+
+    const callStatus =
+        document.getElementById("callStatus");
+
+    const browserStatus =
+        document.getElementById("browserStatus");
+
+    const messageBox =
+        document.getElementById("message");
+
+    const answerBox =
+        document.getElementById("answer");
+
+    const speakButton =
+        document.getElementById("speakButton");
+
+    const sendButton =
+        document.getElementById("sendButton");
+
+    let recognition = null;
+
+    function selectTutor(tutor) {
+        if (tutor === "male") {
+            avatar.textContent = "👨🏻‍🏫";
+            teacherName.textContent = "Teacher Chen";
+        } else {
+            avatar.textContent = "👩🏻‍🏫";
+            teacherName.textContent = "Teacher Mei";
+        }
+    }
+
+    function startListening() {
+        const SpeechRecognition =
+            window.SpeechRecognition ||
+            window.webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+            browserStatus.textContent =
+                "Speech recognition is not supported. Please use Google Chrome.";
+            return;
+        }
+
+        recognition = new SpeechRecognition();
+
+        recognition.lang =
+            document.getElementById("language").value;
+
+        recognition.interimResults = false;
+        recognition.continuous = false;
+
+        recognition.onstart = function () {
+            callStatus.textContent = "Listening...";
+            browserStatus.textContent =
+                "Please speak clearly now.";
+            speakButton.disabled = true;
+        };
+
+        recognition.onresult = function (event) {
+            messageBox.value =
+                event.results[0][0].transcript;
+
+            browserStatus.textContent =
+                "Speech recognised successfully.";
+
+            askAi();
+        };
+
+        recognition.onerror = function (event) {
+            browserStatus.textContent =
+                "Microphone error: " + event.error;
+
+            callStatus.textContent = "Ready";
+            speakButton.disabled = false;
+        };
+
+        recognition.onend = function () {
+            speakButton.disabled = false;
+
+            if (callStatus.textContent === "Listening...") {
+                callStatus.textContent = "Ready";
+            }
+        };
+
+        recognition.start();
+    }
+
+    async function askAi() {
+        const message = messageBox.value.trim();
+
+        if (message === "") {
+            browserStatus.textContent =
+                "Please speak or type a question first.";
+            return;
+        }
+
+        callStatus.textContent = "AI is thinking...";
+        answerBox.textContent =
+            "Please wait for the tutor's answer.";
+
+        sendButton.disabled = true;
+
+        try {
+            const formData =
+                new URLSearchParams();
+
+            formData.append("message", message);
+
+            const response = await fetch(
+                askUrl,
+                {
+                    method: "POST",
+                    credentials: "same-origin",
+
+                    headers: {
+                        "Content-Type":
+                            "application/x-www-form-urlencoded;charset=UTF-8",
+
+                        [csrfHeader]: csrfToken
+                    },
+
+                    body: formData
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    "Server returned " + response.status
+                );
+            }
+
+            const answer = await response.text();
+
+            answerBox.textContent = answer;
+            browserStatus.textContent =
+                "The AI tutor answered successfully.";
+
+            speakAnswer(answer);
+
+        } catch (error) {
+            answerBox.textContent =
+                "The AI tutor could not answer.";
+
+            browserStatus.textContent =
+                error.message;
+
+            callStatus.textContent = "Call error";
+        } finally {
+            sendButton.disabled = false;
+        }
+    }
+
+    function speakAnswer(answer) {
+        window.speechSynthesis.cancel();
+
+        const speech =
+            new SpeechSynthesisUtterance(answer);
+
+        if (/[\u4e00-\u9fff]/.test(answer)) {
+            speech.lang = "zh-CN";
+        } else if (/[\u0980-\u09ff]/.test(answer)) {
+            speech.lang = "bn-BD";
+        } else {
+            speech.lang = "en-US";
+        }
+
+        speech.rate = 0.9;
+        speech.pitch = 1;
+
+        speech.onstart = function () {
+            avatar.classList.add("speaking");
+            callStatus.textContent =
+                "Tutor is speaking...";
+        };
+
+        speech.onend = function () {
+            avatar.classList.remove("speaking");
+            callStatus.textContent =
+                "Ready for your next question";
+        };
+
+        window.speechSynthesis.speak(speech);
+    }
+
+    function endCall() {
+        if (recognition) {
+            recognition.abort();
+        }
+
+        window.speechSynthesis.cancel();
+
+        avatar.classList.remove("speaking");
+        callStatus.textContent = "Call ended";
+        browserStatus.textContent =
+            "The AI tutor call has ended.";
+    }
+
+</script>
+
+</body>
+</html>

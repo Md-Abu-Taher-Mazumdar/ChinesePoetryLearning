@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poetry Quiz</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+
+<nav class="navbar">
+    <div>
+        <strong>诗 Chinese Poetry Learning</strong>
+    </div>
+
+    <div class="nav-links">
+        <a th:href="@{/poems}">Poems</a>
+        <a th:href="@{/history}">Learning History</a>
+
+        <form th:action="@{/logout}" method="post">
+            <button type="submit">Logout</button>
+        </form>
+    </div>
+</nav>
+
+<main class="container">
+
+    <div class="page-header">
+        <div>
+            <h1>Quiz:
+                <span th:text="${poem.title}">
+                    Poem title
+                </span>
+            </h1>
+
+            <p class="muted">
+                Select one answer for every question.
+            </p>
+        </div>
+
+        <a class="button"
+           th:href="@{/poems/{id}(id=${poem.id})}">
+            Back to Poem
+        </a>
+    </div>
+
+    <div class="card"
+         th:if="${#lists.isEmpty(questions)}">
+
+        <h2>No questions available</h2>
+        <p class="muted">
+            Quiz questions have not been added for this poem.
+        </p>
+    </div>
+
+    <form th:unless="${#lists.isEmpty(questions)}"
+          th:action="@{/quiz/{id}(id=${poem.id})}"
+          method="post">
+
+        <section class="card"
+                 th:each="question, status : ${questions}">
+
+            <h2>
+                <span th:text="${status.count}">1</span>.
+                <span th:text="${question.question}">
+                    Question
+                </span>
+            </h2>
+
+            <label>
+                <input style="width: auto"
+                       type="radio"
+                       th:name="${'question_' + question.id}"
+                       value="A"
+                       required>
+
+                A.
+                <span th:text="${question.optionA}">
+                    Option A
+                </span>
+            </label>
+
+            <label>
+                <input style="width: auto"
+                       type="radio"
+                       th:name="${'question_' + question.id}"
+                       value="B">
+
+                B.
+                <span th:text="${question.optionB}">
+                    Option B
+                </span>
+            </label>
+
+            <label>
+                <input style="width: auto"
+                       type="radio"
+                       th:name="${'question_' + question.id}"
+                       value="C">
+
+                C.
+                <span th:text="${question.optionC}">
+                    Option C
+                </span>
+            </label>
+
+            <label>
+                <input style="width: auto"
+                       type="radio"
+                       th:name="${'question_' + question.id}"
+                       value="D">
+
+                D.
+                <span th:text="${question.optionD}">
+                    Option D
+                </span>
+            </label>
+
+            <br>
+        </section>
+
+        <br>
+
+        <button type="submit">
+            Submit Quiz
+        </button>
+    </form>
+
+</main>
+
+</body>
+</html>

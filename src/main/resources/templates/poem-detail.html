@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title th:text="${poem.title} + ' - Chinese Poetry Learning'">
+        Poem Details
+    </title>
+
+    <link rel="stylesheet"
+          th:href="@{/css/style.css}">
+
+    <style>
+        .interactive-poem {
+            font-size: 30px;
+            line-height: 2.2;
+            white-space: pre-line;
+        }
+
+        .interactive-word {
+            display: inline-block;
+            padding: 0 3px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .interactive-word:hover {
+            color: white;
+            background-color: #a91f36;
+            transform: translateY(-2px);
+        }
+
+        .interactive-word.has-information {
+            border-bottom: 2px dotted #a91f36;
+        }
+
+        .word-tooltip {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            min-width: 200px;
+            max-width: 300px;
+            padding: 14px;
+            color: white;
+            background-color: #541322;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+            pointer-events: none;
+        }
+
+        .word-tooltip.visible {
+            display: block;
+        }
+
+        .tooltip-word {
+            margin-bottom: 4px;
+            font-size: 27px;
+            font-weight: bold;
+        }
+
+        .tooltip-pinyin {
+            margin-bottom: 5px;
+            color: #ffd9aa;
+            font-size: 17px;
+        }
+
+        .tooltip-meaning {
+            font-size: 15px;
+            line-height: 1.4;
+        }
+
+        .tooltip-instruction {
+            margin-top: 8px;
+            padding-top: 7px;
+            color: #ffd9aa;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+            font-size: 12px;
+        }
+
+        .vocabulary-word-button {
+            padding: 7px 12px;
+            color: white;
+            background-color: #a91f36;
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+        }
+
+        .vocabulary-word-button:hover {
+            background-color: #7f1728;
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar">
+    <a class="brand"
+       th:href="@{/poems}">
+        诗 Chinese Poetry Learning
+    </a>
+
+    <div class="nav-links">
+        <a th:href="@{/poems}">Poems</a>
+
+        <a th:href="@{/history}">
+            Learning History
+        </a>
+
+        <a th:href="@{/ai-chat}">
+            AI Assistant
+        </a>
+
+        <a th:href="@{/ai-call}">
+            AI Tutor Call
+        </a>
+
+        <a th:href="@{/writing}">
+            Writing Practice
+        </a>
+
+        <a th:href="@{/admin}">
+            Admin Dashboard
+        </a>
+
+        <form th:action="@{/logout}"
+              method="post">
+            <button type="submit">
+                Logout
+            </button>
+        </form>
+    </div>
+</nav>
+
+<main class="container">
+
+    <div class="page-header">
+        <div>
+            <span class="badge"
+                  th:text="${poem.dynasty}">
+                Dynasty
+            </span>
+
+            <h1 th:text="${poem.title}">
+                Poem Title
+            </h1>
+
+            <p class="muted">
+                Written by
+
+                <strong th:text="${poem.author}">
+                    Author
+                </strong>
+            </p>
+        </div>
+
+        <a class="button"
+           th:href="@{/poems}">
+            Back to Library
+        </a>
+    </div>
+
+    <section class="card">
+        <h2>Interactive Chinese Text</h2>
+
+        <p class="muted">
+            Move your mouse over a word to see its pinyin and
+            English meaning. Click a word to hear it.
+        </p>
+
+        <div id="interactiveChineseText"
+             class="interactive-poem">
+        </div>
+
+        <div class="actions">
+            <button type="button"
+                    onclick="speakPoem()">
+                🔊 Listen to Poem
+            </button>
+
+            <button type="button"
+                    onclick="stopSpeaking()">
+                Stop Audio
+            </button>
+        </div>
+    </section>
+
+    <br>
+
+    <section class="card">
+        <h2>Pinyin</h2>
+
+        <p class="poem-text"
+           th:text="${poem.pinyin}">
+            Pinyin
+        </p>
+    </section>
+
+    <br>
+
+    <section class="card">
+        <h2>English Translation</h2>
+
+        <p th:text="${poem.translation}">
+            Translation
+        </p>
+    </section>
+
+    <br>
+
+    <section class="card">
+        <h2>Literary Explanation</h2>
+
+        <p th:text="${poem.explanation}">
+            Explanation
+        </p>
+    </section>
+
+    <br>
+
+    <section class="card">
+        <h2>Cultural Context</h2>
+
+        <p th:text="${poem.culturalContext}">
+            Cultural context
+        </p>
+    </section>
+
+    <br>
+
+    <section class="card">
+        <h2>Important Vocabulary</h2>
+
+        <p class="muted"
+           th:if="${#lists.isEmpty(vocabulary)}">
+            No vocabulary has been added yet.
+        </p>
+
+        <table th:unless="${#lists.isEmpty(vocabulary)}">
+            <thead>
+            <tr>
+                <th>Chinese Word</th>
+                <th>Pinyin</th>
+                <th>English Meaning</th>
+                <th>Example</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <tr th:each="item : ${vocabulary}">
+                <td>
+                    <button type="button"
+                            class="vocabulary-word-button"
+                            th:data-word="${item.word}"
+                            onclick="speakVocabularyWord(this)">
+
+                        <span th:text="${item.word}">
+                            Word
+                        </span>
+                        🔊
+                    </button>
+                </td>
+
+                <td th:text="${item.pinyin}">
+                    Pinyin
+                </td>
+
+                <td th:text="${item.meaning}">
+                    Meaning
+                </td>
+
+                <td th:text="${item.exampleSentence}">
+                    Example
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <br>
+
+    <section class="card">
+        <h2>Learning Activities</h2>
+
+        <div class="actions">
+            <a class="button"
+               th:href="@{/quiz/{id}(id=${poem.id})}">
+                Take Quiz
+            </a>
+
+            <a class="button"
+               th:href="@{/ai-analysis/{id}(id=${poem.id})}">
+                AI Literary Analysis
+            </a>
+
+            <a class="button"
+               th:href="@{/pronunciation/{id}(id=${poem.id})}">
+                Pronunciation Practice
+            </a>
+
+            <a class="button"
+               th:href="@{/handwriting/{id}(id=${poem.id})}">
+                Character Writing
+            </a>
+        </div>
+    </section>
+
+</main>
+
+<!-- Stores the selected poem for JavaScript. -->
+<div id="rawChineseText"
+     style="display: none"
+     th:text="${poem.chineseText}">
+</div>
+
+<!-- Stores vocabulary received from the Java database. -->
+<div id="wordData"
+     style="display: none">
+
+    <span class="word-data"
+          th:each="item : ${vocabulary}"
+          th:data-word="${item.word}"
+          th:data-pinyin="${item.pinyin}"
+          th:data-meaning="${item.meaning}">
+    </span>
+</div>
+
+<!-- Appears when the mouse is over a Chinese word. -->
+<div id="wordTooltip"
+     class="word-tooltip">
+
+    <div id="tooltipWord"
+         class="tooltip-word">
+    </div>
+
+    <div id="tooltipPinyin"
+         class="tooltip-pinyin">
+    </div>
+
+    <div id="tooltipMeaning"
+         class="tooltip-meaning">
+    </div>
+
+    <div class="tooltip-instruction">
+        Click this word to listen
+    </div>
+</div>
+
+<script>
+    const interactiveText =
+        document.getElementById("interactiveChineseText");
+
+    const rawText =
+        document.getElementById("rawChineseText")
+            .textContent;
+
+    const tooltip =
+        document.getElementById("wordTooltip");
+
+    const tooltipWord =
+        document.getElementById("tooltipWord");
+
+    const tooltipPinyin =
+        document.getElementById("tooltipPinyin");
+
+    const tooltipMeaning =
+        document.getElementById("tooltipMeaning");
+
+    /*
+     * This dictionary works without the Internet.
+     * It contains words from the ten poems.
+     */
+    const vocabularyDictionary = new Map();
+
+    const builtInVocabulary = [
+        // 静夜思
+        ["床", "chuáng", "bed"],
+        ["前", "qián", "in front of"],
+        ["明月", "míng yuè", "bright moon"],
+        ["光", "guāng", "light"],
+        ["疑", "yí", "to suspect; to think something may be"],
+        ["是", "shì", "is; to be"],
+        ["地上", "dì shàng", "on the ground"],
+        ["霜", "shuāng", "frost"],
+        ["举头", "jǔ tóu", "to raise one's head"],
+        ["望", "wàng", "to look at; to gaze"],
+        ["低头", "dī tóu", "to lower one's head"],
+        ["思", "sī", "to think of; to miss"],
+        ["故乡", "gù xiāng", "hometown"],
+
+        // 登鹳雀楼
+        ["白日", "bái rì", "the bright sun"],
+        ["依", "yī", "to lean against; beside"],
+        ["山", "shān", "mountain"],
+        ["尽", "jìn", "to end; to disappear"],
+        ["黄河", "Huáng Hé", "the Yellow River"],
+        ["入", "rù", "to enter"],
+        ["海", "hǎi", "sea"],
+        ["流", "liú", "to flow"],
+        ["欲", "yù", "to want; to wish"],
+        ["穷", "qióng", "to reach the limit"],
+        ["千里", "qiān lǐ", "a thousand li; a great distance"],
+        ["目", "mù", "eyes; view"],
+        ["更", "gèng", "even more; again"],
+        ["上", "shàng", "up; above; to ascend"],
+        ["一层楼", "yì céng lóu", "one more storey"],
+
+        // 春晓
+        ["春眠", "chūn mián", "sleeping in spring"],
+        ["不觉", "bù jué", "without noticing"],
+        ["晓", "xiǎo", "dawn"],
+        ["处处", "chù chù", "everywhere"],
+        ["闻", "wén", "to hear"],
+        ["啼鸟", "tí niǎo", "singing birds"],
+        ["夜来", "yè lái", "during the night"],
+        ["风雨声", "fēng yǔ shēng", "the sound of wind and rain"],
+        ["花落", "huā luò", "flowers falling"],
+        ["知", "zhī", "to know"],
+        ["多少", "duō shǎo", "how many; how much"],
+
+        // 鹿柴
+        ["空山", "kōng shān", "empty mountains"],
+        ["不见", "bú jiàn", "cannot see"],
+        ["人", "rén", "person; people"],
+        ["但", "dàn", "only; but"],
+        ["人语", "rén yǔ", "human voices"],
+        ["响", "xiǎng", "sound; echo"],
+        ["返景", "fǎn yǐng", "returning sunlight"],
+        ["深林", "shēn lín", "deep forest"],
+        ["复", "fù", "again"],
+        ["照", "zhào", "to shine upon"],
+        ["青苔", "qīng tái", "green moss"],
+
+        // 相思
+        ["红豆", "hóng dòu", "red beans"],
+        ["生", "shēng", "to grow; to arise"],
+        ["南国", "nán guó", "the southern land"],
+        ["春来", "chūn lái", "when spring comes"],
+        ["发", "fā", "to grow; to sprout"],
+        ["几枝", "jǐ zhī", "how many branches"],
+        ["愿", "yuàn", "to hope; to wish"],
+        ["君", "jūn", "you; a respectful classical term"],
+        ["多采撷", "duō cǎi xié", "gather more of them"],
+        ["此物", "cǐ wù", "this thing"],
+        ["最", "zuì", "most"],
+        ["相思", "xiāng sī", "longing for someone"],
+
+        // 江雪
+        ["千山", "qiān shān", "thousands of mountains"],
+        ["鸟飞", "niǎo fēi", "birds flying"],
+        ["绝", "jué", "to disappear; to cease"],
+        ["万径", "wàn jìng", "thousands of paths"],
+        ["人踪", "rén zōng", "human footprints"],
+        ["灭", "miè", "to vanish"],
+        ["孤舟", "gū zhōu", "a solitary boat"],
+        ["蓑笠翁", "suō lì wēng",
+            "an old man in a straw raincoat and hat"],
+        ["独钓", "dú diào", "to fish alone"],
+        ["寒江", "hán jiāng", "cold river"],
+        ["雪", "xuě", "snow"],
+
+        // 悯农
+        ["锄禾", "chú hé", "hoeing grain crops"],
+        ["日", "rì", "sun; day"],
+        ["当午", "dāng wǔ", "at midday"],
+        ["汗滴", "hàn dī", "drops of sweat"],
+        ["禾", "hé", "grain seedlings"],
+        ["下土", "xià tǔ", "the soil below"],
+        ["谁知", "shuí zhī", "who knows"],
+        ["盘中餐", "pán zhōng cān", "food in the bowl"],
+        ["粒粒", "lì lì", "every grain"],
+        ["皆", "jiē", "all"],
+        ["辛苦", "xīn kǔ", "hard work; hardship"],
+
+        // 望庐山瀑布
+        ["日照", "rì zhào", "sunlight shines"],
+        ["香炉", "Xiāng Lú", "Incense Burner Peak"],
+        ["紫烟", "zǐ yān", "purple mist"],
+        ["遥看", "yáo kàn", "to view from far away"],
+        ["瀑布", "pù bù", "waterfall"],
+        ["挂", "guà", "to hang"],
+        ["前川", "qián chuān", "the river in front"],
+        ["飞流", "fēi liú", "a flying torrent"],
+        ["直下", "zhí xià", "to rush straight down"],
+        ["三千尺", "sān qiān chǐ",
+            "three thousand feet; poetic exaggeration"],
+        ["银河", "yín hé", "the Milky Way"],
+        ["落", "luò", "to fall"],
+        ["九天", "jiǔ tiān", "the highest heavens"],
+
+        // 绝句
+        ["两个", "liǎng gè", "two"],
+        ["黄鹂", "huáng lí", "orioles"],
+        ["鸣", "míng", "to sing; to chirp"],
+        ["翠柳", "cuì liǔ", "green willow trees"],
+        ["一行", "yì háng", "a row; a line"],
+        ["白鹭", "bái lù", "white egrets"],
+        ["青天", "qīng tiān", "blue sky"],
+        ["窗", "chuāng", "window"],
+        ["含", "hán", "to contain; to frame in view"],
+        ["西岭", "xī lǐng", "the western mountains"],
+        ["千秋雪", "qiān qiū xuě", "ancient or perennial snow"],
+        ["门", "mén", "door; doorway"],
+        ["泊", "bó", "to moor; to anchor"],
+        ["东吴", "Dōng Wú", "the Eastern Wu region"],
+        ["万里船", "wàn lǐ chuán", "ships from far away"],
+
+        // 游子吟
+        ["慈母", "cí mǔ", "loving mother"],
+        ["手中线", "shǒu zhōng xiàn", "thread held in the hand"],
+        ["游子", "yóu zǐ", "a son travelling away from home"],
+        ["身上衣", "shēn shàng yī", "the clothes on his body"],
+        ["临行", "lín xíng", "before departure"],
+        ["密密缝", "mì mì féng", "to sew closely and carefully"],
+        ["意恐", "yì kǒng", "to worry that"],
+        ["迟迟归", "chí chí guī", "to return very late"],
+        ["谁言", "shuí yán", "who says"],
+        ["寸草心", "cùn cǎo xīn",
+            "a child's small heart of gratitude"],
+        ["报得", "bào dé", "to be able to repay"],
+        ["三春晖", "sān chūn huī",
+            "warm spring sunshine; a mother's love"]
+    ];
+
+    /*
+     * Copies built-in vocabulary into the dictionary.
+     */
+    builtInVocabulary.forEach(function (entry) {
+        vocabularyDictionary.set(
+            entry[0],
+            {
+                word: entry[0],
+                pinyin: entry[1],
+                meaning: entry[2]
+            }
+        );
+    });
+
+    /*
+     * Reads vocabulary from the database.
+     * Database information replaces built-in information
+     * when both contain the same word.
+     */
+    document
+        .querySelectorAll("#wordData .word-data")
+        .forEach(function (element) {
+            const word = element.dataset.word;
+
+            vocabularyDictionary.set(
+                word,
+                {
+                    word: word,
+                    pinyin: element.dataset.pinyin,
+                    meaning: element.dataset.meaning
+                }
+            );
+        });
+
+    /*
+     * Longer words come first.
+     * Example: 明月 is found before 明 or 月.
+     */
+    const vocabularyWords =
+        Array.from(vocabularyDictionary.keys())
+            .sort(function (firstWord, secondWord) {
+                return secondWord.length - firstWord.length;
+            });
+
+    function isChineseCharacter(character) {
+        return /[\u3400-\u9FFF]/.test(character);
+    }
+
+    function findVocabularyWord(text, startPosition) {
+        for (const word of vocabularyWords) {
+            if (text.startsWith(word, startPosition)) {
+                return word;
+            }
+        }
+
+        return null;
+    }
+
+    function createInteractiveWord(word, information) {
+        const wordElement =
+            document.createElement("span");
+
+        wordElement.className = "interactive-word";
+        wordElement.textContent = word;
+        wordElement.dataset.word = word;
+
+        if (information) {
+            wordElement.classList.add("has-information");
+
+            wordElement.dataset.pinyin =
+                information.pinyin;
+
+            wordElement.dataset.meaning =
+                information.meaning;
+        } else {
+            wordElement.dataset.pinyin =
+                "Pinyin is not available for this character.";
+
+            wordElement.dataset.meaning =
+                "English meaning is not available for this character.";
+        }
+
+        wordElement.addEventListener(
+            "mouseenter",
+            function () {
+                showWordInformation(wordElement);
+            }
+        );
+
+        wordElement.addEventListener(
+            "mousemove",
+            function (event) {
+                moveTooltip(event);
+            }
+        );
+
+        wordElement.addEventListener(
+            "mouseleave",
+            hideWordInformation
+        );
+
+        wordElement.addEventListener(
+            "click",
+            function () {
+                speakWord(wordElement.dataset.word);
+            }
+        );
+
+        return wordElement;
+    }
+
+    function buildInteractivePoem() {
+        interactiveText.innerHTML = "";
+
+        let currentPosition = 0;
+
+        while (currentPosition < rawText.length) {
+            const vocabularyWord =
+                findVocabularyWord(
+                    rawText,
+                    currentPosition
+                );
+
+            if (vocabularyWord !== null) {
+                const information =
+                    vocabularyDictionary.get(vocabularyWord);
+
+                interactiveText.appendChild(
+                    createInteractiveWord(
+                        vocabularyWord,
+                        information
+                    )
+                );
+
+                currentPosition += vocabularyWord.length;
+                continue;
+            }
+
+            const character =
+                rawText[currentPosition];
+
+            if (isChineseCharacter(character)) {
+                interactiveText.appendChild(
+                    createInteractiveWord(
+                        character,
+                        vocabularyDictionary.get(character)
+                    )
+                );
+            } else {
+                interactiveText.appendChild(
+                    document.createTextNode(character)
+                );
+            }
+
+            currentPosition++;
+        }
+    }
+
+    function showWordInformation(element) {
+        tooltipWord.textContent =
+            element.dataset.word;
+
+        tooltipPinyin.textContent =
+            element.dataset.pinyin;
+
+        tooltipMeaning.textContent =
+            element.dataset.meaning;
+
+        tooltip.classList.add("visible");
+    }
+
+    function moveTooltip(event) {
+        const spaceFromMouse = 15;
+
+        const tooltipWidth =
+            tooltip.offsetWidth;
+
+        const tooltipHeight =
+            tooltip.offsetHeight;
+
+        let leftPosition =
+            event.clientX + spaceFromMouse;
+
+        let topPosition =
+            event.clientY + spaceFromMouse;
+
+        if (leftPosition + tooltipWidth >
+            window.innerWidth) {
+
+            leftPosition =
+                event.clientX -
+                tooltipWidth -
+                spaceFromMouse;
+        }
+
+        if (topPosition + tooltipHeight >
+            window.innerHeight) {
+
+            topPosition =
+                event.clientY -
+                tooltipHeight -
+                spaceFromMouse;
+        }
+
+        tooltip.style.left =
+            leftPosition + "px";
+
+        tooltip.style.top =
+            topPosition + "px";
+    }
+
+    function hideWordInformation() {
+        tooltip.classList.remove("visible");
+    }
+
+    function speakWord(word) {
+        window.speechSynthesis.cancel();
+
+        const speech =
+            new SpeechSynthesisUtterance(word);
+
+        speech.lang = "zh-CN";
+        speech.rate = 0.65;
+        speech.pitch = 1;
+
+        window.speechSynthesis.speak(speech);
+    }
+
+    function speakVocabularyWord(button) {
+        speakWord(button.dataset.word);
+    }
+
+    function speakPoem() {
+        window.speechSynthesis.cancel();
+
+        const speech =
+            new SpeechSynthesisUtterance(rawText);
+
+        speech.lang = "zh-CN";
+        speech.rate = 0.75;
+        speech.pitch = 1;
+
+        window.speechSynthesis.speak(speech);
+    }
+
+    function stopSpeaking() {
+        window.speechSynthesis.cancel();
+    }
+
+    buildInteractivePoem();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title th:text="'AI Analysis - ' + ${poem.title}">
+        AI Poem Analysis
+    </title>
+
+    <link rel="stylesheet"
+          th:href="@{/css/style.css}">
+</head>
+
+<body>
+
+<nav class="navbar">
+    <a class="brand" th:href="@{/poems}">
+        Chinese Poetry Learning
+    </a>
+
+    <div class="nav-links">
+        <a th:href="@{/poems}">Poems</a>
+        <a th:href="@{/ai-chat}">AI Chat</a>
+        <a th:href="@{/history}">History</a>
+
+        <form th:action="@{/logout}" method="post">
+            <button type="submit">Log out</button>
+        </form>
+    </div>
+</nav>
+
+<main class="container">
+
+    <header class="page-header">
+        <div>
+            <p class="eyebrow">Local AI Literary Analysis</p>
+
+            <h1 th:text="${poem.title}">
+                Poem title
+            </h1>
+
+            <p>
+                By
+                <strong th:text="${poem.author}">
+                    Author
+                </strong>
+            </p>
+        </div>
+
+        <a class="button secondary"
+           th:href="@{/poems/{id}(id=${poem.id})}">
+            Back to Poem
+        </a>
+    </header>
+
+    <section class="card">
+        <h2>Analyse This Poem</h2>
+
+        <p>
+            The local AI will explain the poem's meaning,
+            imagery, emotions and cultural background.
+        </p>
+
+        <form th:action="@{/ai-analysis/{id}(id=${poem.id})}"
+              method="post">
+
+            <button type="submit">
+                Generate AI Analysis
+            </button>
+        </form>
+    </section>
+
+    <section class="card"
+             th:if="${analysis != null}">
+
+        <h2>AI Analysis Result</h2>
+
+        <div style="white-space: pre-wrap;"
+             th:text="${analysis}">
+            The AI analysis will appear here.
+        </div>
+    </section>
+
+    <section class="card"
+             th:if="${analysis == null}">
+
+        <h2>How It Works</h2>
+
+        <ol>
+            <li>Java collects the selected poem information.</li>
+            <li>Java sends a literary-analysis prompt to the local AI.</li>
+            <li>The AI generates a simple English explanation.</li>
+            <li>The result is displayed safely on this page.</li>
+        </ol>
+    </section>
+
+</main>
+
+</body>
+</html>

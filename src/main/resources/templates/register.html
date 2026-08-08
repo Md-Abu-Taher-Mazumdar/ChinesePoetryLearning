@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Chinese Poetry Learning</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body class="auth-body">
+
+<div class="auth-card">
+    <div class="logo">诗</div>
+
+    <h1>Create Account</h1>
+    <p class="subtitle">Begin your Chinese poetry journey</p>
+
+    <form th:action="@{/register}"
+          th:object="${user}"
+          method="post">
+
+        <label for="fullName">Full name</label>
+        <input id="fullName"
+               type="text"
+               th:field="*{fullName}"
+               placeholder="Enter your full name">
+
+        <div class="field-error"
+             th:if="${#fields.hasErrors('fullName')}"
+             th:errors="*{fullName}">
+        </div>
+
+        <label for="username">Username</label>
+        <input id="username"
+               type="text"
+               th:field="*{username}"
+               placeholder="Choose a username">
+
+        <div class="field-error"
+             th:if="${#fields.hasErrors('username')}"
+             th:errors="*{username}">
+        </div>
+
+        <div class="field-error"
+             th:if="${usernameError}"
+             th:text="${usernameError}">
+        </div>
+
+        <label for="email">Email</label>
+        <input id="email"
+               type="email"
+               th:field="*{email}"
+               placeholder="Enter your email">
+
+        <div class="field-error"
+             th:if="${#fields.hasErrors('email')}"
+             th:errors="*{email}">
+        </div>
+
+        <label for="password">Password</label>
+        <input id="password"
+               type="password"
+               th:field="*{password}"
+               placeholder="Create a password">
+
+        <div class="field-error"
+             th:if="${#fields.hasErrors('password')}"
+             th:errors="*{password}">
+        </div>
+
+        <button type="submit">Create Account</button>
+    </form>
+
+    <p class="auth-link">
+        Already have an account?
+        <a th:href="@{/login}">Log in here</a>
+    </p>
+</div>
+
+</body>
+</html>

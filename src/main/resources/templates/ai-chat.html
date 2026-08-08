@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Poetry Assistant</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+
+<nav class="navbar">
+    <div>
+        <strong>诗 Chinese Poetry Learning</strong>
+    </div>
+
+    <div class="nav-links">
+        <a th:href="@{/poems}">Poems</a>
+        <a th:href="@{/history}">Learning History</a>
+        <a th:href="@{/writing}">Writing Practice</a>
+
+        <form th:action="@{/logout}" method="post">
+            <button type="submit">Logout</button>
+        </form>
+    </div>
+</nav>
+
+<main class="container">
+
+    <div class="page-header">
+        <div>
+            <h1>AI Poetry Assistant</h1>
+            <p class="muted">
+                Ask questions about Chinese poems, vocabulary,
+                culture or literary meaning.
+            </p>
+        </div>
+
+        <a class="button" th:href="@{/poems}">
+            Return to Poems
+        </a>
+    </div>
+
+    <section class="card">
+        <form th:action="@{/ai-chat}" method="post">
+
+            <label for="message">Your question</label>
+
+            <textarea id="message"
+                      name="message"
+                      required
+                      placeholder="Example: Why is the moon important in Chinese poetry?"
+                      th:text="${message}">
+            </textarea>
+
+            <button type="submit">
+                Ask Local AI
+            </button>
+        </form>
+    </section>
+
+    <br>
+
+    <section class="card"
+             th:if="${answer}">
+
+        <h2>AI Answer</h2>
+
+        <div style="white-space: pre-wrap; line-height: 1.7"
+             th:text="${answer}">
+            AI response
+        </div>
+    </section>
+
+    <section class="card"
+             th:unless="${answer}">
+
+        <h2>Example questions</h2>
+
+        <ul>
+            <li>Explain the imagery in 静夜思.</li>
+            <li>What does 故乡 mean?</li>
+            <li>Why is the moon important in Chinese culture?</li>
+            <li>Who was Li Bai?</li>
+        </ul>
+    </section>
+
+</main>
+
+</body>
+</html>

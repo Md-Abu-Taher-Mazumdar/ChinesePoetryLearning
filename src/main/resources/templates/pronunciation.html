@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pronunciation Practice</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+
+<nav class="navbar">
+    <div>
+        <strong>诗 Chinese Poetry Learning</strong>
+    </div>
+
+    <div class="nav-links">
+        <a th:href="@{/poems}">Poems</a>
+        <a th:href="@{/history}">Learning History</a>
+
+        <form th:action="@{/logout}" method="post">
+            <button type="submit">Logout</button>
+        </form>
+    </div>
+</nav>
+
+<main class="container">
+
+    <div class="page-header">
+        <div>
+            <h1>Pronunciation Practice</h1>
+
+            <p class="muted"
+               th:text="${poem.title + ' — ' + poem.author}">
+                Poem and author
+            </p>
+        </div>
+
+        <a class="button"
+           th:href="@{/poems/{id}(id=${poem.id})}">
+            Back to Poem
+        </a>
+    </div>
+
+    <section class="card">
+        <h2>Step 1: Listen Carefully</h2>
+
+        <div id="targetText"
+             class="poem-text"
+             th:text="${poem.chineseText}">
+            Chinese poem
+        </div>
+
+        <p class="muted"
+           th:text="${poem.pinyin}">
+            Pinyin
+        </p>
+
+        <button type="button" onclick="listenToPoem()">
+            🔊 Play Model Pronunciation
+        </button>
+    </section>
+
+    <br>
+
+    <section class="card">
+        <h2>Step 2: Read the Poem Aloud</h2>
+
+        <p>
+            Click the microphone button and read the complete Chinese poem.
+        </p>
+
+        <button type="button" onclick="startRecognition()">
+            🎤 Start Microphone
+        </button>
+
+        <p id="statusMessage" class="muted">
+            The microphone has not started.
+        </p>
+    </section>
+
+    <br>
+
+    <section class="card">
+        <h2>Recognition Result</h2>
+
+        <p>
+            The browser heard:
+        </p>
+
+        <div id="recognizedText"
+             class="poem-text">
+            No speech recorded yet.
+        </div>
+
+        <br>
+
+        <h2>
+            Pronunciation score:
+            <span id="score">0</span>%
+        </h2>
+
+        <div id="feedback"
+             class="success-message">
+            Record your voice to receive feedback.
+        </div>
+    </section>
+
+</main>
+
+<script>
+    function listenToPoem() {
+        const text =
+            document.getElementById("targetText").innerText;
+
+        window.speechSynthesis.cancel();
+
+        const speech =
+            new SpeechSynthesisUtterance(text);
+
+        speech.lang = "zh-CN";
+        speech.rate = 0.75;
+
+        window.speechSynthesis.speak(speech);
+    }
+
+    function startRecognition() {
+        const SpeechRecognition =
+            window.SpeechRecognition ||
+            window.webkitSpeechRecognition;
+
+        const status =
+            document.getElementById("statusMessage");
+
+        if (!SpeechRecognition) {
+            status.innerText =
+                "Speech recognition is not supported. Please use Google Chrome.";
+            return;
+        }
+
+        const recognition =
+            new SpeechRecognition();
+
+        recognition.lang = "zh-CN";
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = function () {
+            status.innerText =
+                "Listening now. Please read the complete poem.";
+        };
+
+        recognition.onresult = function (event) {
+            const spokenText =
+                event.results[0][0].transcript;
+
+            document.getElementById("recognizedText")
+                .innerText = spokenText;
+
+            calculateScore(spokenText);
+        };
+
+        recognition.onerror = function (event) {
+            status.innerText =
+                "Microphone error: " + event.error;
+        };
+
+        recognition.onend = function () {
+            status.innerText =
+                "Recording finished. You may try again.";
+        };
+
+        recognition.start();
+    }
+
+    function calculateScore(spokenText) {
+        const targetText =
+            document.getElementById("targetText").innerText;
+
+        const target = normalizeText(targetText);
+        const spoken = normalizeText(spokenText);
+
+        const distance =
+            levenshteinDistance(target, spoken);
+
+        const longestLength =
+            Math.max(target.length, spoken.length);
+
+        let score = 0;
+
+        if (longestLength > 0) {
+            score = Math.round(
+                (1 - distance / longestLength) * 100
+            );
+        }
+
+        score = Math.max(0, Math.min(100, score));
+
+        document.getElementById("score")
+            .innerText = score;
+
+        const feedback =
+            document.getElementById("feedback");
+
+        if (score >= 85) {
+            feedback.className = "success-message";
+            feedback.innerText =
+                "Excellent pronunciation accuracy.";
+        } else if (score >= 60) {
+            feedback.className = "success-message";
+            feedback.innerText =
+                "Good attempt. Listen again and practise difficult words.";
+        } else {
+            feedback.className = "error-message";
+            feedback.innerText =
+                "Please listen carefully and try reading the poem again.";
+        }
+    }
+
+    function normalizeText(text) {
+        return text.replace(/[^\u3400-\u9FFF]/g, "");
+    }
+
+    function levenshteinDistance(first, second) {
+        const matrix = [];
+
+        for (let row = 0; row <= second.length; row++) {
+            matrix[row] = [row];
+        }
+
+        for (let column = 0; column <= first.length; column++) {
+            matrix[0][column] = column;
+        }
+
+        for (let row = 1; row <= second.length; row++) {
+            for (let column = 1; column <= first.length; column++) {
+                if (
+                    second.charAt(row - 1) ===
+                    first.charAt(column - 1)
+                ) {
+                    matrix[row][column] =
+                        matrix[row - 1][column - 1];
+                } else {
+                    matrix[row][column] = Math.min(
+                        matrix[row - 1][column - 1] + 1,
+                        matrix[row][column - 1] + 1,
+                        matrix[row - 1][column] + 1
+                    );
+                }
+            }
+        }
+
+        return matrix[second.length][first.length];
+    }
+</script>
+
+</body>
+</html>

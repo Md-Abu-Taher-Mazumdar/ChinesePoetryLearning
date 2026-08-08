@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poetry Writing Practice</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+
+<nav class="navbar">
+    <div>
+        <strong>诗 Chinese Poetry Learning</strong>
+    </div>
+
+    <div class="nav-links">
+        <a th:href="@{/poems}">Poems</a>
+        <a th:href="@{/history}">Learning History</a>
+
+        <form th:action="@{/logout}" method="post">
+            <button type="submit">Logout</button>
+        </form>
+    </div>
+</nav>
+
+<main class="container">
+
+    <div class="page-header">
+        <div>
+            <h1>Poetry Writing Practice</h1>
+            <p class="muted">
+                Select a poem and write it from memory.
+            </p>
+        </div>
+
+        <a class="button" th:href="@{/poems}">
+            Return to Poems
+        </a>
+    </div>
+
+    <section class="card">
+        <label for="poemSelect">Select a poem</label>
+
+        <select id="poemSelect"
+                onchange="loadSelectedPoem()">
+
+            <option value="">
+                Choose a poem
+            </option>
+
+            <option th:each="poem : ${poems}"
+                    th:value="${poem.chineseText}"
+                    th:text="${poem.title + ' — ' + poem.author}">
+                Poem
+            </option>
+        </select>
+    </section>
+
+    <br>
+
+    <section class="card">
+        <h2>Write the Chinese poem</h2>
+
+        <textarea id="userWriting"
+                  placeholder="Type the poem here without looking at the answer">
+        </textarea>
+
+        <div class="actions">
+            <button type="button"
+                    onclick="checkWriting()">
+                Check My Writing
+            </button>
+
+            <button type="button"
+                    onclick="showAnswer()">
+                Show Answer
+            </button>
+
+            <button type="button"
+                    onclick="clearWriting()">
+                Clear
+            </button>
+        </div>
+    </section>
+
+    <br>
+
+    <section class="card">
+        <h2>
+            Writing accuracy:
+            <span id="writingAccuracy">0</span>%
+        </h2>
+
+        <div id="writingFeedback"
+             class="success-message">
+            Select a poem and begin writing.
+        </div>
+
+        <div id="correctAnswer"
+             class="poem-text"
+             style="display: none">
+        </div>
+    </section>
+
+</main>
+
+<script>
+    let selectedPoemText = "";
+
+    function loadSelectedPoem() {
+        const select =
+            document.getElementById("poemSelect");
+
+        selectedPoemText = select.value;
+
+        document.getElementById("userWriting").value = "";
+        document.getElementById("writingAccuracy").innerText = "0";
+        document.getElementById("correctAnswer").style.display = "none";
+
+        document.getElementById("writingFeedback")
+            .className = "success-message";
+
+        document.getElementById("writingFeedback")
+            .innerText = selectedPoemText
+            ? "The poem is selected. Write it from memory."
+            : "Please select a poem.";
+    }
+
+    function checkWriting() {
+        const userText =
+            document.getElementById("userWriting").value;
+
+        if (!selectedPoemText) {
+            showError("Please select a poem first.");
+            return;
+        }
+
+        if (!userText.trim()) {
+            showError("Please write something before checking.");
+            return;
+        }
+
+        const target = normalizeText(selectedPoemText);
+        const written = normalizeText(userText);
+
+        const distance =
+            levenshteinDistance(target, written);
+
+        const longest =
+            Math.max(target.length, written.length);
+
+        let score = Math.round(
+            (1 - distance / longest) * 100
+        );
+
+        score = Math.max(0, Math.min(100, score));
+
+        document.getElementById("writingAccuracy")
+            .innerText = score;
+
+        const feedback =
+            document.getElementById("writingFeedback");
+
+        if (score >= 90) {
+            feedback.className = "success-message";
+            feedback.innerText =
+                "Excellent memory and writing accuracy.";
+        } else if (score >= 60) {
+            feedback.className = "success-message";
+            feedback.innerText =
+                "Good work. Review the missing or incorrect characters.";
+        } else {
+            showError(
+                "Read the poem again and continue practising."
+            );
+        }
+    }
+
+    function showAnswer() {
+        if (!selectedPoemText) {
+            showError("Please select a poem first.");
+            return;
+        }
+
+        const answer =
+            document.getElementById("correctAnswer");
+
+        answer.innerText = selectedPoemText;
+        answer.style.display = "block";
+    }
+
+    function clearWriting() {
+        document.getElementById("userWriting").value = "";
+        document.getElementById("writingAccuracy").innerText = "0";
+        document.getElementById("correctAnswer").style.display = "none";
+    }
+
+    function showError(message) {
+        const feedback =
+            document.getElementById("writingFeedback");
+
+        feedback.className = "error-message";
+        feedback.innerText = message;
+    }
+
+    function normalizeText(text) {
+        return text.replace(/[^\u3400-\u9FFF]/g, "");
+    }
+
+    function levenshteinDistance(first, second) {
+        const matrix = [];
+
+        for (let row = 0; row <= second.length; row++) {
+            matrix[row] = [row];
+        }
+
+        for (let column = 0; column <= first.length; column++) {
+            matrix[0][column] = column;
+        }
+
+        for (let row = 1; row <= second.length; row++) {
+            for (let column = 1; column <= first.length; column++) {
+                if (
+                    second.charAt(row - 1) ===
+                    first.charAt(column - 1)
+                ) {
+                    matrix[row][column] =
+                        matrix[row - 1][column - 1];
+                } else {
+                    matrix[row][column] = Math.min(
+                        matrix[row - 1][column - 1] + 1,
+                        matrix[row][column - 1] + 1,
+                        matrix[row - 1][column] + 1
+                    );
+                }
+            }
+        }
+
+        return matrix[second.length][first.length];
+    }
+</script>
+
+</body>
+</html>

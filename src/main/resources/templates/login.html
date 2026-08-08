@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Chinese Poetry Learning</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body class="auth-body">
+
+<div class="auth-card">
+    <div class="logo">诗</div>
+
+    <h1>Welcome Back</h1>
+    <p class="subtitle">Continue learning classical Chinese poetry</p>
+
+    <div class="success-message" th:if="${param.registered}">
+        Registration successful. Please log in.
+    </div>
+
+    <div class="error-message" th:if="${param.error}">
+        Incorrect username or password.
+    </div>
+
+    <div class="success-message" th:if="${param.logout}">
+        You have successfully logged out.
+    </div>
+
+    <form th:action="@{/login}" method="post">
+
+        <label for="username">Username</label>
+        <input id="username"
+               name="username"
+               type="text"
+               placeholder="Enter your username"
+               required>
+
+        <label for="password">Password</label>
+        <input id="password"
+               name="password"
+               type="password"
+               placeholder="Enter your password"
+               required>
+
+        <button type="submit">Log In</button>
+    </form>
+
+    <p class="auth-link">
+        Do not have an account?
+        <a th:href="@{/register}">Create an account</a>
+    </p>
+</div>
+
+</body>
+</html>
